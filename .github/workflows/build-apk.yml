@@ -10,6 +10,10 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    # GitHub 不允许在步骤 if 里直接用 secrets 上下文，故先映射到 env（if 里用 env 判断）
+    env:
+      UPDATE_SERVER: ${{ secrets.UPDATE_SERVER }}
+      UPDATE_TOKEN: ${{ secrets.UPDATE_TOKEN }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -45,8 +49,8 @@ jobs:
           if-no-files-found: error
 
       - name: Pack web assets and upload to update server
-        if: ${{ secrets.UPDATE_SERVER != '' && secrets.UPDATE_TOKEN != '' }}
+        if: ${{ env.UPDATE_SERVER != '' && env.UPDATE_TOKEN != '' }}
         run: |
           which zip >/dev/null 2>&1 || (sudo apt-get update && sudo apt-get install -y zip)
           cd public && zip -r ../web.zip . && cd ..
-          curl -f -F "file=@web.zip" -F "version=${{ github.run_number }}" "${{ secrets.UPDATE_SERVER }}/upload?token=${{ secrets.UPDATE_TOKEN }}"
+          curl -f -F "file=@web.zip" -F "version=${{ github.run_number }}" "${UPDATE_SERVER}/upload?token=${UPDATE_TOKEN}"
