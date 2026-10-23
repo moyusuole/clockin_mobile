@@ -25,9 +25,10 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Install deps & sync web assets
+      - name: Install deps, build vendor bundle & sync web assets
         run: |
           npm install --no-audit --no-fund
+          npm run build:vendor
           npx cap sync android
 
       - name: Build debug APK
@@ -42,3 +43,10 @@ jobs:
           name: app-debug-apk
           path: android/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
+
+      - name: Pack web assets and upload to update server
+        if: ${{ secrets.UPDATE_SERVER != '' && secrets.UPDATE_TOKEN != '' }}
+        run: |
+          which zip >/dev/null 2>&1 || (sudo apt-get update && sudo apt-get install -y zip)
+          cd public && zip -r ../web.zip . && cd ..
+          curl -f -F "file=@web.zip" -F "version=${{ github.run_number }}" "${{ secrets.UPDATE_SERVER }}/upload?token=${{ secrets.UPDATE_TOKEN }}"

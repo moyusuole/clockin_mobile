@@ -20,6 +20,7 @@
 ```bash
 cd checkin-mobile
 npm install
+npm run build:vendor   # 可选：生成热更新桥接文件 public/vendor/capacitor-updater.js（不影响本地预览）
 node server.js
 # 打开 http://localhost:8080
 ```
@@ -80,6 +81,35 @@ npx cap open ios            # 用 Xcode 打开，运行 / Archive 出 ipa
 - `android/` — Capacitor 生成的安卓工程（`npx cap sync` 维护，勿手改）
 - `server.js` — 零依赖本地预览服务器
 - `test/` — 逻辑与存储层自测
+
+## 热更新（自托管，免重装 APK）
+原生 App 的代码是「烤」进安装包的，但**网页层（HTML/JS/CSS）可以走 Capacitor 热更新（live update）**：push 后手机上的 App 自动拉取新版网页资源，**不用重新装 APK**。页面样式 / 打卡逻辑这类改动都属于网页层，配置好一次后，以后改页面直接 push 即可，手机会在下次打开时自动更新。
+
+> 热更新**只更新网页层**。若以后改了原生层（`android/` 里的 Java、新增 Capacitor 插件），仍需重新出 APK 安装。
+
+### 一次性准备（之后就不用了）
+1. **改一处代码**：打开 `public/app.js` 顶部，把
+   `var UPDATER_SERVER = 'https://clockin-update.onrender.com';`
+   改成你的更新服务地址（第 3 步拿到地址后再改，或先用占位、首次出包前改对）。
+2. **在 Render 建更新服务**：New → Web Service → 连 GitHub 选本仓库 → 选 **"Use render.yaml"**（自动读仓库里的 `render.yaml`）；或手动建：Build `npm install`、Start `node update-server.js`、Node 20。部署后在环境变量里设置 **`UPDATE_TOKEN`** = 任意自定字符串（记下来）。等部署完成，记下服务地址，形如 `https://clockin-update-xxxx.onrender.com`。
+3. **在 GitHub 加两个 Secret**（仓库 Settings → Secrets and variables → Actions）：
+   - `UPDATE_SERVER` = 上一步的 Render 服务地址
+   - `UPDATE_TOKEN` = 与第 2 步 Render 里设的 `UPDATE_TOKEN` **完全一致**
+4. 回到第 1 步，把 `app.js` 里的 `UPDATER_SERVER` 改成第 2 步地址，然后 `git push`。
+
+### 之后怎么用
+- **改页面**（HTML/CSS/JS/打卡逻辑）→ `git push` 即可。GitHub Actions 自动：出 APK（保留，首次或改原生时用）+ 把 `public/` 打包上传到更新服务。
+- **手机 App 下次打开时**自动检测并下载新版网页资源、即时生效，**无需重装**。
+- 数据始终在手机本地（SharedPreferences），更新不影响。
+
+### 本地调试更新服务（可选）
+```bash
+npm install
+npm run build:vendor        # 生成 public/vendor/capacitor-updater.js
+node update-server.js       # 默认 http://localhost:3000
+cd public && zip -r ../web.zip . && cd ..
+curl -F "file=@web.zip" -F "version=1" "http://localhost:3000/upload?token=你的TOKEN"
+```
 
 ## 测试
 ```bash
