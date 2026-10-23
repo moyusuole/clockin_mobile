@@ -179,6 +179,10 @@
   }
   function closeEdit() { els.editModal.hidden = true; editingId = null; }
   els.editCancel.addEventListener('click', closeEdit);
+  // 点击弹层灰色背景（modal 本身而非 modal-box）也可关闭
+  els.editModal.addEventListener('click', function (e) {
+    if (e.target === els.editModal) closeEdit();
+  });
   els.editSave.addEventListener('click', function () {
     if (editingId == null) return;
     var r = S.updateTask(editingId, {

@@ -132,6 +132,8 @@ body {
 .backup-actions .btn-ghost { flex: 1; }
 
 .modal { position: fixed; inset: 0; background: rgba(0,0,0,.4); display: flex; align-items: center; justify-content: center; padding: 20px; z-index: 50; }
+/* 关键：hidden 属性必须能真正隐藏弹层，否则弹层会一直显示且按钮无效 */
+.modal[hidden] { display: none; }
 .modal-box { background: #fff; border-radius: var(--radius); padding: 18px; width: 100%; max-width: 380px; display: flex; flex-direction: column; gap: 8px; }
 .modal-title { font-weight: 700; font-size: 17px; margin-bottom: 4px; }
 .modal-actions { display: flex; gap: 10px; margin-top: 6px; }
