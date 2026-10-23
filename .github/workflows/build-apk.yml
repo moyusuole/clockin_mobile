@@ -29,10 +29,11 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Install deps, build vendor bundle & sync web assets
+      # APK 构建路径与“成功出包的 run 2”完全一致：先 npm install + cap sync，再 gradle 打包。
+      # 热更新(vendor 打包 / 上传)全部放到出包之后，且任一失败都不影响 APK 产物。
+      - name: Install deps & sync web assets
         run: |
           npm install --no-audit --no-fund
-          npm run build:vendor
           npx cap sync android
 
       - name: Build debug APK
@@ -48,8 +49,14 @@ jobs:
           path: android/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
 
+      # —— 以下为热更新（Capacitor Updater）相关，失败不影响上面的 APK ——
+      - name: Build vendor bundle (热更新用)
+        continue-on-error: true
+        run: npm run build:vendor
+
       - name: Pack web assets and upload to update server
         if: ${{ env.UPDATE_SERVER != '' && env.UPDATE_TOKEN != '' }}
+        continue-on-error: true
         run: |
           which zip >/dev/null 2>&1 || (sudo apt-get update && sudo apt-get install -y zip)
           cd public && zip -r ../web.zip . && cd ..
