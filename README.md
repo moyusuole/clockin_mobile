@@ -25,6 +25,23 @@ node server.js
 ```
 预览走 localStorage 分支，功能与真机一致；要真·原生体验请打包 APK。
 
+## 云端打包 APK（推荐：本机什么都不用装）
+你电脑上**没有 Android Studio / Android SDK / JDK17**，本机出包要装好几个 G。最省事的办法是推到 GitHub，用 GitHub Actions 云端编译：
+
+1. 在 GitHub 新建一个空仓库（例如 `checkin-mobile`），**不要**勾选自动生成 README/LICENSE（保持空仓库）。
+2. 在 `checkin-mobile/` 目录里执行（仓库已 `git init` 并提交，你只需连远程 + push）：
+   ```bash
+   git remote add origin https://github.com/<你的用户名>/checkin-mobile.git
+   git branch -M main
+   git push -u origin main
+   ```
+3. 打开仓库的 **Actions** 标签页 → 首次会提示「允许 workflow」→ 允许后 Actions 会自动开始运行（或在 Actions 页点 **Run workflow** 手动触发）。
+4. 等待约 3–6 分钟，状态变绿后，在最近一次运行页底部 **Artifacts** 处下载 `app-debug-apk`。
+5. 解压得到 `app-debug.apk`，用数据线传到安卓手机安装即可。
+
+> workflow 已配好：`.github/workflows/build-apk.yml`（setup-java17 + Node + `npx cap sync android` + `./gradlew assembleDebug` + 上传 APK 产物）。
+> 改了 `public/` 后，重新 `git push` 就会自动重新出包。
+
 ## 打包成安卓 APK（在你自己的电脑上）
 前提：电脑已装 **Node.js**、**Java JDK 17**、**Android Studio**（含 Android SDK + 命令行工具）。
 
