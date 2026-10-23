@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no" />
+  <meta name="theme-color" content="#2563eb" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="icon" href="icon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="icon.svg" />
+  <title>每日打卡</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="topbar-title">每日打卡</div>
+      <div class="topbar-date" id="todayLabel"></div>
+    </header>
+
+    <!-- 连续天数 -->
+    <section class="streak-card">
+      <div class="streak-num" id="streakNum">0</div>
+      <div class="streak-label">连续打卡天数</div>
+    </section>
+
+    <!-- 今日打卡 -->
+    <section class="card">
+      <div class="card-head">
+        <span class="card-title">今日打卡</span>
+        <input type="date" id="viewDate" class="date-pick" />
+      </div>
+      <div class="progress">
+        <div class="progress-bar" id="progressBar"></div>
+      </div>
+      <div class="progress-text" id="progressText">0 / 0</div>
+      <ul class="check-list" id="checkList"></ul>
+      <div class="empty" id="checkEmpty" hidden>还没有任务，去下面添加一个吧 👇</div>
+    </section>
+
+    <!-- 统计 -->
+    <section class="card">
+      <div class="card-title">统计</div>
+      <div class="rate-row">
+        <span>近 30 天完成率</span>
+        <span class="rate-val" id="rateVal">0%</span>
+      </div>
+      <div class="progress"><div class="progress-bar green" id="rateBar"></div></div>
+      <ul class="task-stats" id="taskStats"></ul>
+    </section>
+
+    <!-- 任务管理 -->
+    <section class="card">
+      <div class="card-title">我的任务</div>
+      <form class="task-form" id="taskForm">
+        <input type="text" id="taskTitle" placeholder="任务名称，如：运动 30 分钟" maxlength="60" required />
+        <input type="text" id="taskCategory" placeholder="分类（可选）：健康 / 学习…" maxlength="20" />
+        <textarea id="taskDesc" placeholder="备注（可选）" maxlength="200" rows="2"></textarea>
+        <button type="submit" class="btn-primary">添加任务</button>
+      </form>
+      <ul class="task-list" id="taskList"></ul>
+    </section>
+
+    <!-- 数据备份 -->
+    <section class="card">
+      <div class="card-title">数据备份</div>
+      <p class="backup-tip">定期导出备份，换手机或误删 App 时导入即可恢复全部任务与打卡记录。</p>
+      <div class="backup-actions">
+        <button class="btn-primary" id="exportBtn">导出备份</button>
+        <button class="btn-ghost" id="importBtn">导入备份</button>
+        <input type="file" id="importInput" accept="application/json,.json" hidden />
+      </div>
+    </section>
+
+    <footer class="foot">数据仅保存在本机 · 添加到主屏即可当 App 使用</footer>
+  </div>
+
+  <!-- 编辑弹层 -->
+  <div class="modal" id="editModal" hidden>
+    <div class="modal-box">
+      <div class="modal-title">编辑任务</div>
+      <input type="text" id="editTitle" maxlength="60" />
+      <input type="text" id="editCategory" maxlength="20" placeholder="分类" />
+      <textarea id="editDesc" maxlength="200" rows="2" placeholder="备注"></textarea>
+      <div class="modal-actions">
+        <button class="btn-ghost" id="editCancel">取消</button>
+        <button class="btn-primary" id="editSave">保存</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" hidden></div>
+
+  <script src="src/logic.js"></script>
+  <script src="src/storage.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

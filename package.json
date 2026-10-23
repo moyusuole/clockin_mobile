@@ -1,0 +1,23 @@
+{
+  "name": "checkin-mobile",
+  "version": "1.0.0",
+  "description": "任务制定与每日打卡 · 手机原生 App（Capacitor，数据存手机本地，彻底离线不依赖服务器）",
+  "private": true,
+  "scripts": {
+    "start": "node server.js",
+    "test": "node test/logic.test.js && node test/storage.test.js",
+    "sync": "npx cap sync",
+    "android": "npx cap add android && npx cap sync",
+    "ios": "npx cap add ios && npx cap sync",
+    "build:android": "npx cap build android",
+    "build:ios": "npx cap build ios"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^6.0.0"
+  },
+  "dependencies": {
+    "@capacitor/core": "^6.0.0",
+    "@capacitor/android": "^6.0.0",
+    "@capacitor/preferences": "^6.0.0"
+  }
+}
