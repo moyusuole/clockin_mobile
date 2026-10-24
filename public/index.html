@@ -37,6 +37,28 @@
       <div class="empty" id="checkEmpty" hidden>还没有任务，去下面添加一个吧 👇</div>
     </section>
 
+    <!-- 随机五分钟小任务 -->
+    <section class="card" id="fiveMinCard">
+      <div class="card-head">
+        <span class="card-title">⚡ 随机五分钟小任务</span>
+        <button class="mini-btn" id="fmRefresh" type="button">换一个 ⟳</button>
+      </div>
+      <div class="fm-task">
+        <span class="fm-cat" id="fmCat"></span>
+        <div class="fm-title" id="fmTitle"></div>
+        <div class="fm-tip" id="fmTip"></div>
+      </div>
+      <div class="fm-actions">
+        <button class="btn-ghost" id="fmStart" type="button">开始 5 分钟</button>
+        <button class="btn-primary" id="fmDone" type="button">完成 ✓</button>
+      </div>
+      <div class="fm-timer" id="fmTimer" hidden>
+        <span class="fm-clock" id="fmClock">05:00</span>
+        <span class="fm-timer-hint">计时中，做完点「完成」</span>
+      </div>
+      <div class="fm-done" id="fmDoneInfo"></div>
+    </section>
+
     <!-- 统计 -->
     <section class="card">
       <div class="card-title">统计</div>
@@ -94,5 +116,6 @@
   <script src="src/logic.js"></script>
   <script src="src/storage.js"></script>
   <script src="app.js"></script>
+  <script src="fivemin.js"></script>
 </body>
 </html>
