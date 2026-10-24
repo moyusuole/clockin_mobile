@@ -1,10 +1,5 @@
 {
   "appId": "com.you.checkin",
   "appName": "每日打卡",
-  "webDir": "public",
-  "plugins": {
-    "CapacitorUpdater": {
-      "autoUpdate": false
-    }
-  }
+  "webDir": "public"
 }

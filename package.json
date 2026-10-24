@@ -6,24 +6,16 @@
   "scripts": {
     "start": "node server.js",
     "test": "node test/logic.test.js && node test/storage.test.js",
-    "build:vendor": "esbuild src/updater-bridge.js --bundle --format=iife --outfile=public/vendor/capacitor-updater.js",
-    "sync": "npm run build:vendor && npx cap sync",
-    "update-server": "node update-server.js",
-    "android": "npm run build:vendor && npx cap add android && npx cap sync",
-    "ios": "npm run build:vendor && npx cap add ios && npx cap sync",
-    "build:android": "npm run build:vendor && npx cap build android",
-    "build:ios": "npm run build:ios"
+    "sync": "npx cap sync",
+    "android": "npx cap add android && npx cap sync",
+    "ios": "npx cap add ios && npx cap sync"
   },
   "devDependencies": {
-    "@capacitor/cli": "^6.0.0",
-    "esbuild": "^0.21.5"
+    "@capacitor/cli": "^6.0.0"
   },
   "dependencies": {
     "@capacitor/core": "^6.0.0",
     "@capacitor/android": "^6.0.0",
-    "@capacitor/preferences": "^6.0.0",
-    "@capgo/capacitor-updater": "^6.0.0",
-    "express": "^4.19.2",
-    "multer": "^1.4.5-lts.1"
+    "@capacitor/preferences": "^6.0.0"
   }
 }

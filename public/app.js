@@ -4,8 +4,6 @@
  */
 (function () {
   'use strict';
-  // ⚠️ 部署后改成你的 Render 更新服务地址（首次出 APK 前必须改对，否则手机拉不到第一次热更新）
-  var UPDATER_SERVER = 'https://clockin-update.onrender.com';
   var L = window.CheckinLogic;
   var S = window.CheckinStorage;
 
@@ -238,36 +236,9 @@
     });
   }
 
-  // ---- 热更新（仅原生 App 生效，浏览器开发环境自动跳过）----
-  function setupUpdater() {
-    var updater = window.CapacitorUpdater;
-    if (!updater || !window.Capacitor || !window.Capacitor.isNativePlatform || !window.Capacitor.isNativePlatform()) return;
-    try { updater.notifyAppReady(); } catch (e) {}
-    if (!UPDATER_SERVER) return;
-    fetch(UPDATER_SERVER + '/update', { cache: 'no-store' })
-      .then(function (r) { return r.ok ? r.json() : null; })
-      .then(function (data) {
-        if (!data || !data.version || !data.url) return;
-        var cur = parseInt(localStorage.getItem('cu_version') || '0', 10);
-        var next = parseInt(data.version, 10);
-        if (next > cur) {
-          // 先写回版本号：set 会刷新页面，写早一点避免刷新后再次判定需要更新而循环下载
-          localStorage.setItem('cu_version', String(next));
-          updater.download({ url: data.url, version: String(next) })
-            .then(function (b) { return updater.set({ id: b.id }); })
-            .catch(function (e) {
-              localStorage.setItem('cu_version', String(cur)); // 失败回滚，下次打开重试
-              console.warn('热更新失败', e);
-            });
-        }
-      })
-      .catch(function (e) { console.warn('检查更新失败', e); });
-  }
-
   // 先初始化存储（原生异步、浏览器同步），再渲染。
   S.init().then(function () {
     renderAll();
-    setupUpdater();
   }).catch(function (e) {
     console.error('storage init failed', e);
     renderAll();
