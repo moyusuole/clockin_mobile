@@ -139,8 +139,34 @@ body {
 .modal-actions { display: flex; gap: 10px; margin-top: 6px; }
 .modal-actions .btn-primary { flex: 1; }
 
+/* ---- 随机五分钟小任务 ---- */
+.mini-btn {
+  background: #fff; color: var(--blue); border: 1px solid var(--blue);
+  border-radius: 99px; padding: 5px 12px; font-size: 13px; font-weight: 600; cursor: pointer;
+}
+.mini-btn:active { background: #eef2ff; }
+.fm-task { padding: 2px 2px 12px; }
+.fm-cat {
+  display: inline-block; background: #eef2ff; color: var(--blue);
+  padding: 2px 10px; border-radius: 99px; font-size: 12px;
+}
+.fm-title { font-size: 18px; font-weight: 700; margin-top: 8px; line-height: 1.4; }
+.fm-tip { font-size: 13px; color: var(--muted); margin-top: 4px; line-height: 1.45; }
+.fm-actions { display: flex; gap: 10px; margin-top: 6px; }
+.fm-actions .btn-primary, .fm-actions .btn-ghost { flex: 1; }
+.fm-timer {
+  display: flex; align-items: center; gap: 10px; margin-top: 10px;
+  padding: 10px 12px; background: #f0fdf4; border-radius: 12px;
+}
+.fm-clock {
+  font-size: 22px; font-weight: 800; color: var(--green);
+  font-variant-numeric: tabular-nums; letter-spacing: .5px;
+}
+.fm-timer-hint { font-size: 12px; color: var(--muted); }
+.fm-done { font-size: 13px; color: var(--green); margin-top: 10px; font-weight: 600; }
+
 .toast {
   position: fixed; left: 50%; bottom: 40px; transform: translateX(-50%);
   background: rgba(31,41,55,.92); color: #fff; padding: 10px 18px; border-radius: 99px;
   font-size: 14px; z-index: 80; max-width: 80%; text-align: center;
-}
+                                           }
