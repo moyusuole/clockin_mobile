@@ -14,13 +14,35 @@
   <div class="app">
     <header class="topbar">
       <div class="topbar-title">每日打卡</div>
-      <div class="topbar-date" id="todayLabel"></div>
+      <div class="topbar-right">
+        <div class="topbar-date" id="todayLabel"></div>
+        <button class="theme-btn" id="themeBtn" type="button" title="切换深色 / 浅色">🌙</button>
+      </div>
     </header>
 
     <!-- 连续天数 -->
     <section class="streak-card">
       <div class="streak-num" id="streakNum">0</div>
       <div class="streak-label">连续打卡天数</div>
+    </section>
+
+    <!-- 打卡热力图 -->
+    <section class="card">
+      <div class="card-title">打卡热力图</div>
+      <div class="hm-wrap">
+        <div class="hm-months" id="hmMonths"></div>
+        <div class="hm-body">
+          <div class="hm-weekdays">
+            <span>一</span><span>三</span><span>五</span><span>日</span>
+          </div>
+          <div class="hm-grid" id="hmGrid"></div>
+        </div>
+      </div>
+      <div class="hm-legend">
+        <span>少</span>
+        <i class="hm-cell l0"></i><i class="hm-cell l1"></i><i class="hm-cell l2"></i><i class="hm-cell l3"></i><i class="hm-cell l4"></i>
+        <span>多</span>
+      </div>
     </section>
 
     <!-- 今日打卡 -->
@@ -51,6 +73,20 @@
       <div class="fm-actions">
         <button class="btn-ghost" id="fmStart" type="button">开始 5 分钟</button>
         <button class="btn-primary" id="fmDone" type="button">完成 ✓</button>
+      </div>
+      <div class="fm-mood" id="fmMood" hidden>
+        <div class="fm-mood-label">完成这个小任务时，你的心情是？</div>
+        <div class="mood-row" id="moodRow">
+          <button type="button" data-mood="😀">😀</button>
+          <button type="button" data-mood="🙂">🙂</button>
+          <button type="button" data-mood="😐">😐</button>
+          <button type="button" data-mood="😟">😟</button>
+          <button type="button" data-mood="😴">😴</button>
+          <button type="button" data-mood="💪">💪</button>
+          <button type="button" data-mood="🔥">🔥</button>
+        </div>
+        <textarea id="fmNote" class="fm-note" placeholder="写点感受（可选）" rows="2" maxlength="200"></textarea>
+        <button class="btn-ghost" id="fmRecord" type="button">记录心情 / 备注</button>
       </div>
       <div class="fm-timer" id="fmTimer" hidden>
         <span class="fm-clock" id="fmClock">05:00</span>
@@ -90,6 +126,22 @@
         <button class="btn-primary" id="exportBtn">导出备份</button>
         <button class="btn-ghost" id="importBtn">导入备份</button>
         <input type="file" id="importInput" accept="application/json,.json" hidden />
+      </div>
+    </section>
+
+    <!-- 打卡提醒 -->
+    <section class="card" id="reminderCard">
+      <div class="card-head">
+        <span class="card-title">🔔 每日打卡提醒</span>
+        <label class="switch">
+          <input type="checkbox" id="reminderToggle" />
+          <span class="slider"></span>
+        </label>
+      </div>
+      <p class="backup-tip" id="reminderTip">开启后，每天固定时间提醒你回来打卡（仅本机通知，不联网）。</p>
+      <div class="reminder-time" id="reminderTimeRow">
+        <span>提醒时间</span>
+        <input type="time" id="reminderTime" value="20:00" />
       </div>
     </section>
 

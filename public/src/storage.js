@@ -28,7 +28,10 @@
     return {
       users: [{ id: DEFAULT_USER_ID, username: '我', created_at: L.todayStr() }],
       tasks: [],
-      checkins: []
+      checkins: [],
+      theme: 'light',
+      reminder: { enabled: false, time: '20:00' },
+      fiveMinLogs: []
     };
   }
 
@@ -159,6 +162,40 @@
       return { ok: true, checked: true };
     },
 
+    // ---- 主题（浅色/深色）----
+    getTheme: function () { return (state && state.theme === 'dark') ? 'dark' : 'light'; },
+    setTheme: function (theme) {
+      if (!state) return;
+      state.theme = (theme === 'dark') ? 'dark' : 'light';
+      persist();
+    },
+
+    // ---- 打卡提醒 ----
+    getReminder: function () {
+      var r = (state && state.reminder) || { enabled: false, time: '20:00' };
+      return { enabled: !!r.enabled, time: /^([01]\d|2[0-3]):[0-5]\d$/.test(r.time) ? r.time : '20:00' };
+    },
+    setReminder: function (r) {
+      if (!state) return;
+      state.reminder = {
+        enabled: !!(r && r.enabled),
+        time: (r && /^([01]\d|2[0-3]):[0-5]\d$/.test(r.time)) ? r.time : '20:00'
+      };
+      persist();
+    },
+
+    // ---- 五分钟小任务「心情 / 备注」记录 ----
+    getFiveMinLogs: function () {
+      return (state && Array.isArray(state.fiveMinLogs)) ? state.fiveMinLogs : [];
+    },
+    addFiveMinLog: function (log) {
+      if (!state) return { ok: false };
+      if (!Array.isArray(state.fiveMinLogs)) state.fiveMinLogs = [];
+      state.fiveMinLogs.push(Object.assign({ date: L.todayStr(), ts: Date.now() }, log));
+      persist();
+      return { ok: true };
+    },
+
     // 预留多用户：导出可序列化快照（未来后端同步用）
     exportSnapshot: function () { return JSON.parse(JSON.stringify(state)); },
 
@@ -193,7 +230,16 @@
       var tasks = incoming.tasks.map(function (t) { return Object.assign({ user_id: DEFAULT_USER_ID, archived: false }, t); });
       var checkins = incoming.checkins.map(function (c) { return Object.assign({ user_id: DEFAULT_USER_ID }, c); });
 
-      state = { users: users, tasks: tasks, checkins: checkins };
+      state = {
+        users: users,
+        tasks: tasks,
+        checkins: checkins,
+        theme: (incoming.theme === 'dark') ? 'dark' : 'light',
+        reminder: (incoming.reminder && incoming.reminder.enabled)
+          ? { enabled: true, time: /^([01]\d|2[0-3]):[0-5]\d$/.test(incoming.reminder.time) ? incoming.reminder.time : '20:00' }
+          : { enabled: false, time: '20:00' },
+        fiveMinLogs: Array.isArray(incoming.fiveMinLogs) ? incoming.fiveMinLogs : []
+      };
       seq = Math.max(0,
         state.tasks.reduce(function (m, t) { return Math.max(m, t.id || 0); }, 0),
         state.checkins.reduce(function (m, c) { return Math.max(m, c.id || 0); }, 0)

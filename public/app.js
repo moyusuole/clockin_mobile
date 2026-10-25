@@ -32,8 +32,20 @@
     exportBtn: document.getElementById('exportBtn'),
     importBtn: document.getElementById('importBtn'),
     importInput: document.getElementById('importInput'),
-    toast: document.getElementById('toast')
+    toast: document.getElementById('toast'),
+    themeBtn: document.getElementById('themeBtn'),
+    hmGrid: document.getElementById('hmGrid'),
+    hmMonths: document.getElementById('hmMonths'),
+    reminderCard: document.getElementById('reminderCard'),
+    reminderToggle: document.getElementById('reminderToggle'),
+    reminderTime: document.getElementById('reminderTime'),
+    reminderTimeRow: document.getElementById('reminderTimeRow'),
+    reminderTip: document.getElementById('reminderTip')
   };
+
+  // 原生本地通知插件（仅在打包后的原生 App 中可用；浏览器预览为 null）
+  var LN = (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.LocalNotifications)
+    ? window.Capacitor.Plugins.LocalNotifications : null;
 
   var today = L.todayStr();
   var viewDate = today;
@@ -120,6 +132,112 @@
     renderStreak();
     renderChecklist();
     renderTaskList();
+    renderHeatmap();
+  }
+
+  // ---- 打卡热力图（GitHub 风格：列=周，行=周一~周日）----
+  function renderHeatmap() {
+    if (!els.hmGrid) return;
+    var checkins = S.getCheckins();
+    var byDate = {};
+    checkins.forEach(function (c) { byDate[c.date] = (byDate[c.date] || 0) + 1; });
+    var weeks = 17;
+    var lastIndex = weeks * 7 - 1;
+    var start = L.addDays(today, -lastIndex);
+    // 对齐到周一，保证整周网格
+    var sd = new Date(start + 'T00:00:00');
+    var sDow = (sd.getDay() + 6) % 7; // 周一=0
+    if (sDow > 0) start = L.addDays(start, -sDow);
+
+    var cells = [];
+    var monthLabels = new Array(weeks).fill('');
+    var prevMonth = -1;
+    for (var c = 0; c < weeks; c++) {
+      for (var r = 0; r < 7; r++) {
+        var dateStr = L.addDays(start, c * 7 + r);
+        var count = byDate[dateStr] || 0;
+        var future = dateStr > today;
+        var lvl = count === 0 ? 0 : (count === 1 ? 1 : (count <= 3 ? 2 : (count <= 6 ? 3 : 4)));
+        var cls = 'hm-cell l' + lvl + (future ? ' empty' : '');
+        var tip = dateStr + (count ? ' · 完成 ' + count + ' 项' : '');
+        cells.push('<i class="' + cls + '" title="' + tip + '"></i>');
+        if (r === 0) {
+          var m = new Date(dateStr + 'T00:00:00').getMonth();
+          monthLabels[c] = (m !== prevMonth) ? (m + 1) + '月' : '';
+          prevMonth = m;
+        }
+      }
+    }
+    els.hmGrid.innerHTML = cells.join('');
+    if (els.hmMonths) {
+      els.hmMonths.innerHTML = monthLabels.map(function (t) {
+        return '<span style="width:14px;flex:none;display:inline-block">' + t + '</span>';
+      }).join('');
+    }
+  }
+
+  // ---- 主题（深色 / 浅色）----
+  function applyTheme(theme) {
+    var dark = theme === 'dark';
+    document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+    if (els.themeBtn) els.themeBtn.textContent = dark ? '☀️' : '🌙';
+  }
+
+  // ---- 打卡提醒（原生本地通知）----
+  function setReminderRowEnabled(on) {
+    if (els.reminderTimeRow) els.reminderTimeRow.classList.toggle('disabled', !on);
+  }
+  function scheduleReminder(time, enabled) {
+    if (!LN) return;
+    LN.cancel({ notifications: [{ id: 1 }] }).catch(function () {});
+    if (!enabled) return;
+    var doSchedule = function () {
+      var p = String(time).split(':');
+      var at = new Date();
+      at.setHours(parseInt(p[0], 10), parseInt(p[1], 10), 0, 0);
+      if (at <= new Date()) at.setDate(at.getDate() + 1);
+      LN.schedule({
+        notifications: [{
+          id: 1, title: '该打卡啦 🌿',
+          body: '今天的目标还没完成，去「每日打卡」看看吧',
+          schedule: { every: 'day', at: at }
+        }]
+      }).catch(function (e) { console.warn('schedule fail', e); });
+    };
+    LN.checkPermissions().then(function (perm) {
+      var ok = perm && (perm.display === 'granted' || perm.receive === 'granted');
+      if (ok) { doSchedule(); return; }
+      LN.requestPermissions().then(function (gr) {
+        var ok2 = gr && (gr.display === 'granted' || gr.receive === 'granted');
+        if (ok2) doSchedule();
+      }).catch(function () {});
+    }).catch(function () {});
+  }
+  function setupReminderUI() {
+    if (!els.reminderToggle) return;
+    var r = S.getReminder();
+    els.reminderToggle.checked = r.enabled;
+    els.reminderTime.value = r.time;
+    setReminderRowEnabled(r.enabled);
+    els.reminderToggle.addEventListener('change', function () {
+      var enabled = els.reminderToggle.checked;
+      S.setReminder({ enabled: enabled, time: els.reminderTime.value });
+      setReminderRowEnabled(enabled);
+      if (enabled && !LN) { toast('提醒需在打包安装的原生 App 中才能用'); return; }
+      scheduleReminder(els.reminderTime.value, enabled);
+      if (enabled) toast('已开启每日提醒');
+    });
+    els.reminderTime.addEventListener('change', function () {
+      S.setReminder({ enabled: els.reminderToggle.checked, time: els.reminderTime.value });
+      if (els.reminderToggle.checked && LN) scheduleReminder(els.reminderTime.value, true);
+    });
+    if (!LN) {
+      if (els.reminderTip) els.reminderTip.textContent = '提醒需打包安装为原生 App 后可用（当前为浏览器预览，已禁用）。';
+      els.reminderToggle.disabled = true;
+      setReminderRowEnabled(false);
+    } else if (r.enabled) {
+      scheduleReminder(r.time, true);
+    }
   }
 
   // ---- 事件 ----
@@ -128,6 +246,14 @@
     viewDate = els.viewDate.value || today;
     renderChecklist();
   });
+
+  if (els.themeBtn) {
+    els.themeBtn.addEventListener('click', function () {
+      var next = (S.getTheme() === 'dark') ? 'light' : 'dark';
+      S.setTheme(next);
+      applyTheme(next);
+    });
+  }
 
   els.checkList.addEventListener('click', function (e) {
     var box = e.target.closest('.check-box');
@@ -238,6 +364,8 @@
 
   // 先初始化存储（原生异步、浏览器同步），再渲染。
   S.init().then(function () {
+    applyTheme(S.getTheme());
+    setupReminderUI();
     renderAll();
   }).catch(function (e) {
     console.error('storage init failed', e);

@@ -6,10 +6,43 @@
   --line: #e5e7eb;
   --blue: #2563eb;
   --blue-d: #1d4ed8;
+  --blue-2: #4f86f7;
   --green: #16a34a;
   --red: #dc2626;
+  --tag-bg: #eef2ff;
+  --tag-fg: #2563eb;
+  --input-bg: #ffffff;
+  --btn-ghost-bg: #ffffff;
+  --btn-ghost-fg: #6b7280;
+  --modal-bg: #ffffff;
+  --mini-bg: #ffffff;
+  --fm-timer-bg: #f0fdf4;
   --shadow: 0 1px 3px rgba(0, 0, 0, .08), 0 1px 2px rgba(0, 0, 0, .04);
   --radius: 16px;
+}
+
+/* 深色主题：整体视觉保留，仅替换配色变量 */
+:root[data-theme="dark"] {
+  --bg: #0f1115;
+  --card: #1a1d24;
+  --ink: #e5e7eb;
+  --muted: #9aa3b2;
+  --line: #2a2f3a;
+  --blue: #3b82f6;
+  --blue-d: #2563eb;
+  --blue-2: #60a5fa;
+  --green: #22c55e;
+  --red: #f87171;
+  --tag-bg: #1e293b;
+  --tag-fg: #93c5fd;
+  --input-bg: #232730;
+  --btn-ghost-bg: #232730;
+  --btn-ghost-fg: #9aa3b2;
+  --modal-bg: #1a1d24;
+  --mini-bg: #232730;
+  --fm-timer-bg: #14321f;
+  --shadow: 0 1px 3px rgba(0, 0, 0, .4), 0 1px 2px rgba(0, 0, 0, .3);
+  color-scheme: dark;
 }
 
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -36,7 +69,7 @@ body {
 .topbar-date { color: var(--muted); font-size: 13px; }
 
 .streak-card {
-  background: linear-gradient(135deg, var(--blue), #4f86f7);
+  background: linear-gradient(135deg, var(--blue), var(--blue-2));
   color: #fff; border-radius: var(--radius);
   padding: 18px; text-align: center; box-shadow: var(--shadow);
   margin-bottom: 14px;
@@ -53,7 +86,7 @@ body {
 
 .date-pick {
   border: 1px solid var(--line); border-radius: 10px;
-  padding: 6px 8px; font-size: 14px; color: var(--ink); background: #fff;
+  padding: 6px 8px; font-size: 14px; color: var(--ink); background: var(--input-bg);
 }
 
 .progress { height: 8px; background: var(--line); border-radius: 99px; overflow: hidden; }
@@ -78,7 +111,7 @@ body {
 .check-title { font-weight: 600; }
 .check-title.done { color: var(--muted); text-decoration: line-through; }
 .check-cat { font-size: 12px; color: var(--muted); margin-top: 2px; }
-.check-cat .tag { background: #eef2ff; color: var(--blue); padding: 1px 8px; border-radius: 99px; }
+.check-cat .tag { background: var(--tag-bg); color: var(--tag-fg); padding: 1px 8px; border-radius: 99px; }
 
 .empty { color: var(--muted); text-align: center; padding: 18px 0; font-size: 14px; }
 
@@ -97,7 +130,7 @@ body {
 .modal input, .modal textarea {
   border: 1px solid var(--line); border-radius: 10px;
   padding: 10px 12px; font-size: 15px; font-family: inherit; color: var(--ink);
-  background: #fff; resize: none; width: 100%;
+  background: var(--input-bg); resize: none; width: 100%;
 }
 .task-form input:focus, .task-form textarea:focus,
 .modal input:focus, .modal textarea:focus { outline: none; border-color: var(--blue); }
@@ -108,7 +141,7 @@ body {
 }
 .btn-primary:active { background: var(--blue-d); }
 .btn-ghost {
-  background: #fff; color: var(--muted); border: 1px solid var(--line);
+  background: var(--btn-ghost-bg); color: var(--btn-ghost-fg); border: 1px solid var(--line);
   border-radius: 10px; padding: 11px; font-size: 15px; cursor: pointer; flex: 1;
 }
 
@@ -134,20 +167,20 @@ body {
 .modal { position: fixed; inset: 0; background: rgba(0,0,0,.4); display: flex; align-items: center; justify-content: center; padding: 20px; z-index: 50; }
 /* 关键：hidden 属性必须能真正隐藏弹层，否则弹层会一直显示且按钮无效 */
 .modal[hidden] { display: none; }
-.modal-box { background: #fff; border-radius: var(--radius); padding: 18px; width: 100%; max-width: 380px; display: flex; flex-direction: column; gap: 8px; }
+.modal-box { background: var(--modal-bg); border-radius: var(--radius); padding: 18px; width: 100%; max-width: 380px; display: flex; flex-direction: column; gap: 8px; }
 .modal-title { font-weight: 700; font-size: 17px; margin-bottom: 4px; }
 .modal-actions { display: flex; gap: 10px; margin-top: 6px; }
 .modal-actions .btn-primary { flex: 1; }
 
 /* ---- 随机五分钟小任务 ---- */
 .mini-btn {
-  background: #fff; color: var(--blue); border: 1px solid var(--blue);
+  background: var(--mini-bg); color: var(--blue); border: 1px solid var(--blue);
   border-radius: 99px; padding: 5px 12px; font-size: 13px; font-weight: 600; cursor: pointer;
 }
-.mini-btn:active { background: #eef2ff; }
+.mini-btn:active { background: var(--tag-bg); }
 .fm-task { padding: 2px 2px 12px; }
 .fm-cat {
-  display: inline-block; background: #eef2ff; color: var(--blue);
+  display: inline-block; background: var(--tag-bg); color: var(--tag-fg);
   padding: 2px 10px; border-radius: 99px; font-size: 12px;
 }
 .fm-title { font-size: 18px; font-weight: 700; margin-top: 8px; line-height: 1.4; }
@@ -156,7 +189,7 @@ body {
 .fm-actions .btn-primary, .fm-actions .btn-ghost { flex: 1; }
 .fm-timer {
   display: flex; align-items: center; gap: 10px; margin-top: 10px;
-  padding: 10px 12px; background: #f0fdf4; border-radius: 12px;
+  padding: 10px 12px; background: var(--fm-timer-bg); border-radius: 12px;
 }
 .fm-clock {
   font-size: 22px; font-weight: 800; color: var(--green);
@@ -170,3 +203,64 @@ body {
   background: rgba(31,41,55,.92); color: #fff; padding: 10px 18px; border-radius: 99px;
   font-size: 14px; z-index: 80; max-width: 80%; text-align: center;
                                            }
+
+/* ---- 顶栏右侧：日期 + 主题切换 ---- */
+.topbar-right { display: flex; align-items: center; gap: 10px; }
+.theme-btn {
+  width: 34px; height: 34px; border-radius: 50%; border: 1px solid var(--line);
+  background: var(--card); color: var(--ink); font-size: 17px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; line-height: 1;
+}
+.theme-btn:active { transform: scale(.94); }
+
+/* ---- 打卡热力图 ---- */
+.hm-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 4px; }
+.hm-months { display: flex; font-size: 10px; color: var(--muted); margin: 2px 0 4px 22px; gap: 0; white-space: nowrap; }
+.hm-body { display: flex; gap: 6px; }
+.hm-weekdays { display: flex; flex-direction: column; font-size: 10px; color: var(--muted); justify-content: space-between; padding: 1px 0; height: 84px; }
+.hm-grid { display: grid; grid-auto-flow: column; grid-template-rows: repeat(7, 11px); gap: 3px; }
+.hm-cell { width: 11px; height: 11px; border-radius: 3px; background: var(--line); }
+.hm-cell.l0 { background: var(--line); }
+.hm-cell.l1 { background: #bbf7d0; }
+.hm-cell.l2 { background: #86efac; }
+.hm-cell.l3 { background: #4ade80; }
+.hm-cell.l4 { background: var(--green); }
+:root[data-theme="dark"] .hm-cell.l1 { background: #14532d; }
+:root[data-theme="dark"] .hm-cell.l2 { background: #166534; }
+:root[data-theme="dark"] .hm-cell.l3 { background: #16a34a; }
+:root[data-theme="dark"] .hm-cell.l4 { background: #22c55e; }
+.hm-cell.empty { background: transparent; }
+.hm-legend { display: flex; align-items: center; gap: 4px; justify-content: flex-end; font-size: 11px; color: var(--muted); margin-top: 8px; }
+.hm-legend .hm-cell { width: 11px; height: 11px; }
+
+/* ---- 开关 switch ---- */
+.switch { position: relative; display: inline-block; width: 46px; height: 26px; flex: none; }
+.switch input { opacity: 0; width: 0; height: 0; }
+.slider { position: absolute; inset: 0; background: var(--line); border-radius: 99px; transition: .2s; cursor: pointer; }
+.slider::before { content: ""; position: absolute; height: 20px; width: 20px; left: 3px; top: 3px; background: #fff; border-radius: 50%; transition: .2s; }
+.switch input:checked + .slider { background: var(--blue); }
+.switch input:checked + .slider::before { transform: translateX(20px); }
+.switch input:disabled + .slider { opacity: .5; cursor: not-allowed; }
+
+.reminder-time { display: flex; align-items: center; justify-content: space-between; margin-top: 10px; font-size: 14px; color: var(--ink); }
+.reminder-time input[type="time"] {
+  border: 1px solid var(--line); border-radius: 10px; padding: 6px 10px;
+  font-size: 15px; color: var(--ink); background: var(--input-bg); font-family: inherit;
+}
+#reminderTimeRow.disabled { opacity: .45; pointer-events: none; }
+
+/* ---- 五分钟小任务：心情 / 备注 ---- */
+.fm-mood { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line); }
+.fm-mood-label { font-size: 13px; color: var(--muted); margin-bottom: 8px; }
+.mood-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+.mood-row button {
+  width: 40px; height: 40px; border-radius: 12px; border: 1px solid var(--line);
+  background: var(--card); font-size: 20px; cursor: pointer; transition: .15s;
+}
+.mood-row button.sel { border-color: var(--blue); background: var(--tag-bg); transform: scale(1.05); }
+.fm-note {
+  width: 100%; border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px;
+  font-size: 14px; font-family: inherit; color: var(--ink); background: var(--input-bg);
+  resize: none; margin-bottom: 10px;
+}
+.fm-mood .btn-ghost { width: 100%; }
