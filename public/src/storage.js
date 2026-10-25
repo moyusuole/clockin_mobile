@@ -31,7 +31,11 @@
       checkins: [],
       theme: 'light',
       reminder: { enabled: false, time: '20:00' },
-      fiveMinLogs: []
+      fiveMinLogs: [],
+      // 每日卡片：记录「哪天 + 手动刷新了几次」，跨天自动重置实现每日自动刷新
+      dailyCards: { date: '', factOffset: 0, quoteOffset: 0 },
+      // 时间胶囊：写给未来的信
+      capsules: []
     };
   }
 
@@ -196,6 +200,81 @@
       return { ok: true };
     },
 
+    // ---- 每日卡片（冷知识 / 名言）----
+    // 若记录的日期不是今天，说明跨天了 → 自动把 offset 归零，实现"每天自动刷新两条"。
+    getDailyCards: function (today) {
+      today = today || L.todayStr();
+      var d = state && state.dailyCards;
+      if (!d || d.date !== today) {
+        d = { date: today, factOffset: 0, quoteOffset: 0 };
+        state.dailyCards = d;
+        persist();
+      }
+      return { date: d.date, factOffset: (d.factOffset | 0), quoteOffset: (d.quoteOffset | 0) };
+    },
+
+    // 手动刷新：对应类型的 offset +1（滑到洗牌序列的下一组，当天不会立刻重复）
+    bumpDailyCard: function (type, today) {
+      today = today || L.todayStr();
+      this.getDailyCards(today);
+      var d = state.dailyCards;
+      if (type === 'quote') d.quoteOffset = (d.quoteOffset | 0) + 1;
+      else d.factOffset = (d.factOffset | 0) + 1;
+      persist();
+      return { factOffset: d.factOffset, quoteOffset: d.quoteOffset };
+    },
+
+    // ---- 时间胶囊 ----
+    getCapsules: function () {
+      return (state && Array.isArray(state.capsules)) ? state.capsules : [];
+    },
+
+    addCapsule: function (input) {
+      if (!state) return { ok: false, error: '存储未初始化' };
+      if (!Array.isArray(state.capsules)) state.capsules = [];
+      var content = String((input && input.content) || '').trim();
+      var openAt = String((input && input.openAt) || '');
+      if (!content) return { ok: false, error: '写点什么再封存吧' };
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(openAt)) return { ok: false, error: '请选择开启日期' };
+      if (openAt <= L.todayStr()) return { ok: false, error: '开启日期要选明天以后' };
+      var capsule = {
+        id: nextId(),
+        content: content.slice(0, 2000),
+        createdAt: L.todayStr(),
+        openAt: openAt,
+        opened: false,
+        openedAt: null
+      };
+      state.capsules.push(capsule);
+      persist();
+      return { ok: true, capsule: capsule };
+    },
+
+    // 到期且未开启的胶囊（按开启日期升序）
+    getDueCapsules: function (today) {
+      today = today || L.todayStr();
+      return this.getCapsules()
+        .filter(function (c) { return !c.opened && c.openAt <= today; })
+        .sort(function (a, b) { return a.openAt < b.openAt ? -1 : (a.openAt > b.openAt ? 1 : 0); });
+    },
+
+    // 拆封：只标记，不删除，保留可回看
+    openCapsule: function (id) {
+      var c = this.getCapsules().find(function (x) { return x.id === id; });
+      if (!c) return { ok: false, error: '胶囊不存在' };
+      c.opened = true;
+      c.openedAt = L.todayStr();
+      persist();
+      return { ok: true, capsule: c };
+    },
+
+    deleteCapsule: function (id) {
+      if (!state) return { ok: false };
+      state.capsules = this.getCapsules().filter(function (c) { return c.id !== id; });
+      persist();
+      return { ok: true };
+    },
+
     // 预留多用户：导出可序列化快照（未来后端同步用）
     exportSnapshot: function () { return JSON.parse(JSON.stringify(state)); },
 
@@ -238,7 +317,9 @@
         reminder: (incoming.reminder && incoming.reminder.enabled)
           ? { enabled: true, time: /^([01]\d|2[0-3]):[0-5]\d$/.test(incoming.reminder.time) ? incoming.reminder.time : '20:00' }
           : { enabled: false, time: '20:00' },
-        fiveMinLogs: Array.isArray(incoming.fiveMinLogs) ? incoming.fiveMinLogs : []
+        fiveMinLogs: Array.isArray(incoming.fiveMinLogs) ? incoming.fiveMinLogs : [],
+        dailyCards: { date: '', factOffset: 0, quoteOffset: 0 },
+        capsules: Array.isArray(incoming.capsules) ? incoming.capsules : []
       };
       seq = Math.max(0,
         state.tasks.reduce(function (m, t) { return Math.max(m, t.id || 0); }, 0),

@@ -95,6 +95,26 @@
       <div class="fm-done" id="fmDoneInfo"></div>
     </section>
 
+    <!-- 今日冷知识 -->
+    <section class="card">
+      <div class="card-head">
+        <span class="card-title">💡 今日冷知识</span>
+        <button class="mini-btn" id="factRefresh" type="button">换两条 ⟳</button>
+      </div>
+      <ul class="daily-list" id="factList"></ul>
+      <div class="daily-foot">每天自动更新 · 手动可换</div>
+    </section>
+
+    <!-- 今日名言 -->
+    <section class="card">
+      <div class="card-head">
+        <span class="card-title">✨ 今日名言</span>
+        <button class="mini-btn" id="quoteRefresh" type="button">换两条 ⟳</button>
+      </div>
+      <ul class="daily-list" id="quoteList"></ul>
+      <div class="daily-foot">每天自动更新 · 手动可换</div>
+    </section>
+
     <!-- 统计 -->
     <section class="card">
       <div class="card-title">统计</div>
@@ -116,6 +136,21 @@
         <button type="submit" class="btn-primary">添加任务</button>
       </form>
       <ul class="task-list" id="taskList"></ul>
+    </section>
+
+    <!-- 时间胶囊 -->
+    <section class="card" id="capsuleCard">
+      <div class="card-title">⏳ 时间胶囊</div>
+      <p class="backup-tip">写给未来的自己。到了那一天，它会自动弹出来；也可以留着不必急着拆。</p>
+      <form class="cap-form" id="capForm">
+        <textarea id="capContent" placeholder="写给未来的自己……（最多 500 字）" maxlength="500" rows="3" required></textarea>
+        <div class="cap-form-row">
+          <input type="date" id="capOpenAt" required />
+          <button type="submit" class="btn-primary">封存 ✉️</button>
+        </div>
+      </form>
+      <ul class="cap-list" id="capList"></ul>
+      <div class="daily-foot" id="capEmpty">还没有封存任何胶囊</div>
     </section>
 
     <!-- 数据备份 -->
@@ -162,10 +197,23 @@
     </div>
   </div>
 
+  <!-- 时间胶囊开启弹层 -->
+  <div class="modal" id="capModal" hidden>
+    <div class="modal-box">
+      <div class="cap-modal-badge">⏳ 时间胶囊到了</div>
+      <div class="cap-modal-meta" id="capModalMeta"></div>
+      <div class="cap-modal-body" id="capModalBody"></div>
+      <div class="modal-actions">
+        <button class="btn-primary" id="capModalOk">收下这封信</button>
+      </div>
+    </div>
+  </div>
+
   <div class="toast" id="toast" hidden></div>
 
   <script src="src/logic.js"></script>
   <script src="src/storage.js"></script>
+  <script src="daily-content.js"></script>
   <script src="app.js"></script>
   <script src="fivemin-tasks.js"></script>
   <script src="fivemin.js"></script>

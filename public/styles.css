@@ -264,3 +264,57 @@ body {
   resize: none; margin-bottom: 10px;
 }
 .fm-mood .btn-ghost { width: 100%; }
+
+/* ---- 每日卡片：冷知识 / 名言 ---- */
+.daily-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.daily-item { display: flex; gap: 10px; align-items: flex-start; }
+.daily-idx {
+  flex: none; width: 22px; height: 22px; border-radius: 7px;
+  background: var(--tag-bg); color: var(--tag-fg);
+  font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center;
+  margin-top: 2px;
+}
+.daily-idx.quote-idx {
+  background: var(--fm-timer-bg); color: var(--green);
+  font-size: 20px; line-height: 1; padding-bottom: 4px;
+}
+.daily-text { font-size: 15px; line-height: 1.65; color: var(--ink); flex: 1; word-break: break-word; }
+.daily-text .daily-author { display: block; margin-top: 4px; font-size: 13px; color: var(--muted); }
+.daily-foot { margin-top: 10px; font-size: 12px; color: var(--muted); text-align: right; }
+
+/* ---- 时间胶囊 ---- */
+.cap-form { margin-top: 10px; }
+.cap-form textarea {
+  width: 100%; border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px;
+  font-size: 14px; font-family: inherit; color: var(--ink); background: var(--input-bg);
+  resize: vertical; margin-bottom: 10px;
+}
+.cap-form-row { display: flex; gap: 10px; align-items: center; }
+.cap-form-row input[type="date"] {
+  flex: 1; border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px;
+  font-size: 14px; color: var(--ink); background: var(--input-bg); font-family: inherit;
+}
+.cap-form-row .btn-primary { flex: none; padding: 8px 16px; white-space: nowrap; }
+.cap-list { list-style: none; margin: 14px 0 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.cap-item { border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; background: var(--card); }
+.cap-item.opened { opacity: .88; }
+.cap-top { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+.cap-date { font-size: 13px; font-weight: 700; color: var(--ink); }
+.cap-left { font-size: 12px; color: var(--muted); flex: 1; }
+.cap-del {
+  border: 1px solid var(--line); background: transparent; color: var(--muted);
+  border-radius: 8px; padding: 2px 8px; font-size: 12px; cursor: pointer; font-family: inherit;
+}
+.cap-body { font-size: 14px; line-height: 1.6; color: var(--ink); word-break: break-word; }
+.cap-body.cap-locked { color: var(--muted); }
+.cap-created { margin-top: 6px; font-size: 12px; color: var(--muted); }
+
+/* ---- 胶囊开启弹层 ---- */
+.cap-modal-badge { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
+.cap-modal-meta { font-size: 12px; color: var(--muted); margin-bottom: 12px; }
+.cap-modal-body {
+  font-size: 15px; line-height: 1.75; color: var(--ink);
+  background: var(--fm-timer-bg); border: 1px solid var(--line); border-radius: 12px;
+  padding: 14px; margin-bottom: 16px; white-space: pre-wrap; word-break: break-word;
+  max-height: 50vh; overflow-y: auto;
+}

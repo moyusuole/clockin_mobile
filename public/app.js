@@ -40,7 +40,22 @@
     reminderToggle: document.getElementById('reminderToggle'),
     reminderTime: document.getElementById('reminderTime'),
     reminderTimeRow: document.getElementById('reminderTimeRow'),
-    reminderTip: document.getElementById('reminderTip')
+    reminderTip: document.getElementById('reminderTip'),
+    // 每日卡片
+    factList: document.getElementById('factList'),
+    quoteList: document.getElementById('quoteList'),
+    factRefresh: document.getElementById('factRefresh'),
+    quoteRefresh: document.getElementById('quoteRefresh'),
+    // 时间胶囊
+    capForm: document.getElementById('capForm'),
+    capContent: document.getElementById('capContent'),
+    capOpenAt: document.getElementById('capOpenAt'),
+    capList: document.getElementById('capList'),
+    capEmpty: document.getElementById('capEmpty'),
+    capModal: document.getElementById('capModal'),
+    capModalMeta: document.getElementById('capModalMeta'),
+    capModalBody: document.getElementById('capModalBody'),
+    capModalOk: document.getElementById('capModalOk')
   };
 
   // 原生本地通知插件（仅在打包后的原生 App 中可用；浏览器预览为 null）
@@ -133,6 +148,8 @@
     renderChecklist();
     renderTaskList();
     renderHeatmap();
+    renderDaily();
+    renderCapsules();
   }
 
   // ---- 打卡热力图（GitHub 风格：列=周，行=周一~周日）----
@@ -173,6 +190,115 @@
       els.hmMonths.innerHTML = monthLabels.map(function (t) {
         return '<span style="width:14px;flex:none;display:inline-block">' + t + '</span>';
       }).join('');
+    }
+  }
+
+  // ---- 每日卡片（冷知识 / 名言）----
+  // 数据源：daily-content.js 内置语料，纯本地、零网络。
+  // 每天确定性洗牌 → 跨天自动换新；手动刷新 = offset+1，当天不重复。
+  var DC = window.DailyContent;
+
+  function renderDaily() {
+    if (!DC || !els.factList || !els.quoteList) return;
+    var day = L.todayStr();
+    var prog = S.getDailyCards(day);
+    var facts = DC.drawFacts(day, prog.factOffset, 2);
+    var quotes = DC.drawQuotes(day, prog.quoteOffset, 2);
+    els.factList.innerHTML = facts.map(function (f, i) {
+      return '<li class="daily-item"><span class="daily-idx">' + (i + 1) + '</span>' +
+        '<span class="daily-text">' + esc(f) + '</span></li>';
+    }).join('');
+    els.quoteList.innerHTML = quotes.map(function (q) {
+      return '<li class="daily-item"><span class="daily-idx quote-idx">“</span>' +
+        '<span class="daily-text">' + esc(q.t) +
+        (q.a ? '<span class="daily-author">— ' + esc(q.a) + '</span>' : '') +
+        '</span></li>';
+    }).join('');
+  }
+
+  // ---- 时间胶囊 ----
+  function daysBetween(fromDate, toDate) {
+    var ms = new Date(toDate + 'T00:00:00') - new Date(fromDate + 'T00:00:00');
+    return Math.round(ms / 86400000);
+  }
+
+  function renderCapsules() {
+    if (!els.capList) return;
+    var day = L.todayStr();
+    var list = S.getCapsules().slice().sort(function (a, b) {
+      return a.openAt < b.openAt ? -1 : (a.openAt > b.openAt ? 1 : 0);
+    });
+    els.capList.innerHTML = list.map(function (c) {
+      var left = daysBetween(day, c.openAt);
+      var status = c.opened
+        ? (c.openedAt + ' 已开启')
+        : (left >= 0 ? ('还有 ' + left + ' 天开启') : ('已到期 ' + Math.abs(left) + ' 天'));
+      // 未开启不泄露内容，只显示字数，保留拆封的仪式感
+      var body = c.opened
+        ? '<div class="cap-body">' + esc(c.content).replace(/\n/g, '<br>') + '</div>'
+        : '<div class="cap-body cap-locked">🔒 未开启 · 共 ' + c.content.length + ' 字</div>';
+      return '<li class="cap-item' + (c.opened ? ' opened' : '') + '">' +
+        '<div class="cap-top">' +
+          '<span class="cap-date">' + esc(c.openAt) + '</span>' +
+          '<span class="cap-left">' + esc(status) + '</span>' +
+          '<button class="cap-del" type="button" data-capdel="' + c.id + '">删除</button>' +
+        '</div>' +
+        body +
+        '<div class="cap-created">写于 ' + esc(c.createdAt) + '</div>' +
+        '</li>';
+    }).join('');
+    if (els.capEmpty) els.capEmpty.hidden = list.length !== 0;
+  }
+
+  // 到期的胶囊：打开 App 时依次弹出（只弹一次，弹出即标记已开启）
+  var dueQueue = [];
+  function showNextCapsule() {
+    var c = dueQueue.shift();
+    if (!c) { if (els.capModal) els.capModal.hidden = true; return; }
+    els.capModalMeta.textContent = '写于 ' + c.createdAt +
+      ' · 距今 ' + Math.max(0, daysBetween(c.createdAt, L.todayStr())) + ' 天';
+    els.capModalBody.textContent = c.content;
+    els.capModal.hidden = false;
+    S.openCapsule(c.id);
+    renderCapsules();
+  }
+  function checkDueCapsules() {
+    dueQueue = S.getDueCapsules(L.todayStr()).slice();
+    if (dueQueue.length) showNextCapsule();
+  }
+
+  // 原生本地通知：到期当天上午 9 点提醒一次（id 段位 2000+，避开每日打卡提醒的 id=1）
+  function scheduleCapsuleNotice(c) {
+    if (!LN || !c || c.opened) return;
+    var nid = 2000 + (Number(c.id) % 1000);
+    var at = new Date(c.openAt + 'T09:00:00');
+    if (!(at > new Date())) at = new Date(Date.now() + 60000);
+    var doIt = function () {
+      LN.schedule({
+        notifications: [{
+          id: nid,
+          title: '⏳ 时间胶囊到了',
+          body: '你曾在 ' + c.createdAt + ' 写给未来的自己，点开看看吧',
+          schedule: { at: at }
+        }]
+      }).catch(function (e) { console.warn('capsule notify fail', e); });
+    };
+    LN.checkPermissions().then(function (perm) {
+      if (perm && perm.display === 'granted') { doIt(); return; }
+      LN.requestPermissions().then(function (p) {
+        if (p && p.display === 'granted') doIt();
+      }).catch(function () {});
+    }).catch(function () {});
+  }
+
+  function setupCapsules() {
+    if (els.capOpenAt) {
+      var now = L.todayStr();
+      els.capOpenAt.min = L.addDays(now, 1);
+      els.capOpenAt.value = L.addDays(now, 30); // 默认一个月后开启
+    }
+    if (LN) {
+      S.getCapsules().forEach(function (c) { if (!c.opened) scheduleCapsuleNotice(c); });
     }
   }
 
@@ -355,6 +481,55 @@
     e.target.value = ''; // 允许重复导入同一文件
   });
 
+  // ---- 每日卡片：手动刷新 ----
+  if (els.factRefresh) {
+    els.factRefresh.addEventListener('click', function () {
+      S.bumpDailyCard('fact', L.todayStr());
+      renderDaily();
+    });
+  }
+  if (els.quoteRefresh) {
+    els.quoteRefresh.addEventListener('click', function () {
+      S.bumpDailyCard('quote', L.todayStr());
+      renderDaily();
+    });
+  }
+
+  // ---- 时间胶囊：封存 / 删除 / 拆封 ----
+  if (els.capForm) {
+    els.capForm.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var r = S.addCapsule({ content: els.capContent.value, openAt: els.capOpenAt.value });
+      if (!r.ok) { toast(r.error); return; }
+      els.capContent.value = '';
+      els.capOpenAt.value = L.addDays(L.todayStr(), 30);
+      renderCapsules();
+      scheduleCapsuleNotice(r.capsule);
+      toast('已封存 · ' + r.capsule.openAt + ' 开启');
+    });
+  }
+  if (els.capList) {
+    els.capList.addEventListener('click', function (e) {
+      var btn = e.target.closest('button[data-capdel]');
+      if (!btn) return;
+      if (!confirm('确定删除这个胶囊吗？')) return;
+      S.deleteCapsule(Number(btn.getAttribute('data-capdel')));
+      renderCapsules();
+      toast('已删除');
+    });
+  }
+  if (els.capModalOk) {
+    els.capModalOk.addEventListener('click', function () {
+      showNextCapsule();
+      if (!dueQueue.length) toast('已收下这封信');
+    });
+  }
+  if (els.capModal) {
+    els.capModal.addEventListener('click', function (e) {
+      if (e.target === els.capModal) showNextCapsule();
+    });
+  }
+
   // 仅在浏览器（非原生 App）下注册 Service Worker；原生 App 本身已离线。
   if ('serviceWorker' in navigator && !window.Capacitor) {
     window.addEventListener('load', function () {
@@ -367,6 +542,8 @@
     applyTheme(S.getTheme());
     setupReminderUI();
     renderAll();
+    setupCapsules();
+    checkDueCapsules(); // 到期胶囊：打开即自动弹信
   }).catch(function (e) {
     console.error('storage init failed', e);
     renderAll();
