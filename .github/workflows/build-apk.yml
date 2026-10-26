@@ -20,6 +20,12 @@ jobs:
           distribution: temurin
           java-version: '17'
 
+      # 手动安装/补齐 Android SDK 35（热更新插件的 AndroidX 依赖要求 compileSdk 35）
+      - name: Setup Android SDK 35
+        uses: android-actions/setup-android@v3
+        with:
+          packages: 'platforms;android-35 build-tools;34.0.0 build-tools;35.0.0'
+
       - name: Setup Node 20
         uses: actions/setup-node@v4
         with:

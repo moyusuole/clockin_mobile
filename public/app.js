@@ -544,6 +544,7 @@
     renderAll();
     setupCapsules();
     checkDueCapsules(); // 到期胶囊：打开即自动弹信
+    if (window.CheckinUpdater) window.CheckinUpdater.init();
   }).catch(function (e) {
     console.error('storage init failed', e);
     renderAll();

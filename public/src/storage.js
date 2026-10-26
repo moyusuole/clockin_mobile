@@ -35,7 +35,9 @@
       // 每日卡片：记录「哪天 + 手动刷新了几次」，跨天自动重置实现每日自动刷新
       dailyCards: { date: '', factOffset: 0, quoteOffset: 0 },
       // 时间胶囊：写给未来的信
-      capsules: []
+      capsules: [],
+      // 热更新配置：服务器地址 + 开关（换手机导入备份时一并带走）
+      update: { url: '', enabled: false, installedVersion: '' }
     };
   }
 
@@ -224,6 +226,29 @@
       return { factOffset: d.factOffset, quoteOffset: d.quoteOffset };
     },
 
+    // ---- 热更新配置（仅原生 App 生效）----
+    // url 为空表示未配置，此时绝不发起任何网络请求，保持纯离线特性。
+    getUpdateSettings: function () {
+      var u = (state && state.update) || {};
+      return {
+        url: (typeof u.url === 'string') ? u.url.trim() : '',
+        enabled: !!u.enabled,
+        installedVersion: (typeof u.installedVersion === 'string') ? u.installedVersion : ''
+      };
+    },
+    setUpdateSettings: function (patch) {
+      if (!state) return { ok: false };
+      var cur = this.getUpdateSettings();
+      state.update = {
+        url: (patch && patch.url !== undefined) ? String(patch.url).trim() : cur.url,
+        enabled: (patch && patch.enabled !== undefined) ? !!patch.enabled : cur.enabled,
+        installedVersion: (patch && patch.installedVersion !== undefined)
+          ? String(patch.installedVersion) : cur.installedVersion
+      };
+      persist();
+      return { ok: true, settings: state.update };
+    },
+
     // ---- 时间胶囊 ----
     getCapsules: function () {
       return (state && Array.isArray(state.capsules)) ? state.capsules : [];
@@ -319,7 +344,14 @@
           : { enabled: false, time: '20:00' },
         fiveMinLogs: Array.isArray(incoming.fiveMinLogs) ? incoming.fiveMinLogs : [],
         dailyCards: { date: '', factOffset: 0, quoteOffset: 0 },
-        capsules: Array.isArray(incoming.capsules) ? incoming.capsules : []
+        capsules: Array.isArray(incoming.capsules) ? incoming.capsules : [],
+        update: (incoming.update && typeof incoming.update.url === 'string')
+          ? {
+              url: incoming.update.url,
+              enabled: !!incoming.update.enabled,
+              installedVersion: String(incoming.update.installedVersion || '')
+            }
+          : { url: '', enabled: false, installedVersion: '' }
       };
       seq = Math.max(0,
         state.tasks.reduce(function (m, t) { return Math.max(m, t.id || 0); }, 0),

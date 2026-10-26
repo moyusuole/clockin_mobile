@@ -180,6 +180,25 @@
       </div>
     </section>
 
+    <!-- 自动更新（热更新） -->
+    <section class="card" id="updaterCard">
+      <div class="card-head">
+        <span class="card-title">🚀 自动更新</span>
+        <label class="switch">
+          <input type="checkbox" id="updToggle" />
+          <span class="slider"></span>
+        </label>
+      </div>
+      <p class="backup-tip" id="updTip">填好更新服务器后，每次打开 App 会自动静默下载新版，下次打开生效——不用重新下载安装包。</p>
+      <div class="upd-url-row" id="updUrlRow">
+        <input type="url" id="updUrl" placeholder="https://你的更新服务器地址" />
+      </div>
+      <div class="upd-status" id="updStatus">当前：随 APK 内置版本</div>
+      <div class="backup-actions">
+        <button class="btn-ghost" id="updCheck" type="button">检查更新</button>
+      </div>
+    </section>
+
     <footer class="foot">数据仅保存在本机 · 添加到主屏即可当 App 使用</footer>
   </div>
 
@@ -215,6 +234,7 @@
   <script src="src/storage.js"></script>
   <script src="daily-content.js"></script>
   <script src="app.js"></script>
+  <script src="updater.js"></script>
   <script src="fivemin-tasks.js"></script>
   <script src="fivemin.js"></script>
 </body>
