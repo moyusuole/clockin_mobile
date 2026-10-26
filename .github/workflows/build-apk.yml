@@ -24,7 +24,7 @@ jobs:
       - name: Setup Android SDK 35
         uses: android-actions/setup-android@v3
         with:
-          packages: 'platforms;android-35 build-tools;34.0.0 build-tools;35.0.0'
+          packages: 'platform-tools platforms;android-35 build-tools;34.0.0 build-tools;35.0.0'
 
       - name: Setup Node 20
         uses: actions/setup-node@v4
@@ -41,7 +41,16 @@ jobs:
         run: |
           chmod +x android/gradlew
           cd android
-          ./gradlew assembleDebug --no-daemon
+          set -o pipefail
+          ./gradlew assembleDebug --no-daemon --stacktrace 2>&1 | tee build.log | tail -60
+
+      # 失败时把关键错误行写入 annotations（便于远程诊断）
+      - name: Report gradle errors
+        if: failure()
+        run: |
+          cd android
+          grep -E "FAILURE:|What went wrong|Caused by:|Execution failed|error:|Minimum supported|Could not (get|find|resolve|determine|apply)|> Task .+ FAILED|SDK location not found" build.log | head -60 | while IFS= read -r line; do echo "::error::$line"; done
+          exit 0
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
