@@ -62,6 +62,21 @@
   var LN = (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.LocalNotifications)
     ? window.Capacitor.Plugins.LocalNotifications : null;
 
+  // 通知渠道：用 importance=5(HIGH) 的自定义渠道，让提醒以浮窗(heads-up)形式从顶部弹出，而非静默进通知栏
+  var LN_CHANNEL = 'checkin_reminder';
+  function ensureNotifyChannel() {
+    if (!LN) return Promise.resolve();
+    return LN.createChannel({
+      id: LN_CHANNEL,
+      name: '打卡与提醒',
+      description: '每日打卡提醒与时间胶囊提醒（浮窗）',
+      importance: 5,   // 5 = HIGH：触发顶部浮窗横幅
+      visibility: 1,   // 1 = PUBLIC：锁屏也显示内容
+      vibration: true
+    }).catch(function (e) { console.warn('create notify channel fail', e); });
+  }
+  ensureNotifyChannel();
+
   var today = L.todayStr();
   var viewDate = today;
   var editingId = null;
@@ -274,14 +289,17 @@
     var at = new Date(c.openAt + 'T09:00:00');
     if (!(at > new Date())) at = new Date(Date.now() + 60000);
     var doIt = function () {
-      LN.schedule({
-        notifications: [{
-          id: nid,
-          title: '⏳ 时间胶囊到了',
-          body: '你曾在 ' + c.createdAt + ' 写给未来的自己，点开看看吧',
-          schedule: { at: at }
-        }]
-      }).catch(function (e) { console.warn('capsule notify fail', e); });
+      ensureNotifyChannel().then(function () {
+        LN.schedule({
+          notifications: [{
+            id: nid,
+            title: '⏳ 时间胶囊到了',
+            body: '你曾在 ' + c.createdAt + ' 写给未来的自己，点开看看吧',
+            channelId: LN_CHANNEL,
+            schedule: { at: at }
+          }]
+        }).catch(function (e) { console.warn('capsule notify fail', e); });
+      });
     };
     LN.checkPermissions().then(function (perm) {
       if (perm && perm.display === 'granted') { doIt(); return; }
@@ -322,13 +340,16 @@
       var at = new Date();
       at.setHours(parseInt(p[0], 10), parseInt(p[1], 10), 0, 0);
       if (at <= new Date()) at.setDate(at.getDate() + 1);
-      LN.schedule({
-        notifications: [{
-          id: 1, title: '该打卡啦 🌿',
-          body: '今天的目标还没完成，去「每日打卡」看看吧',
-          schedule: { every: 'day', at: at }
-        }]
-      }).catch(function (e) { console.warn('schedule fail', e); });
+      ensureNotifyChannel().then(function () {
+        LN.schedule({
+          notifications: [{
+            id: 1, title: '该打卡啦 🌿',
+            body: '今天的目标还没完成，去「每日打卡」看看吧',
+            channelId: LN_CHANNEL,
+            schedule: { every: 'day', at: at }
+          }]
+        }).catch(function (e) { console.warn('schedule fail', e); });
+      });
     };
     LN.checkPermissions().then(function (perm) {
       var ok = perm && (perm.display === 'granted' || perm.receive === 'granted');
