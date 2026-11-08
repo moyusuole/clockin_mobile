@@ -64,8 +64,13 @@
     if (el.check) el.check.disabled = true;
     setStatus('正在检查更新…');
     try {
-      // 确保插件用我们配置的 URL（persistModifyUrl 已开启，地址会持久保存）
-      await p.setUpdateUrl({ url: cfg.url });
+      // 仅在用户填了地址时才用 setUpdateUrl 覆盖（需 allowModifyUrl=true）；
+      // 若未填，插件会直接用 capacitor.config.json 里写死的默认地址。
+      // 用 try 包裹：地址设置失败也不拖累整个更新流程（仍可用默认地址）。
+      if (isHttpUrl(cfg.url)) {
+        try { await p.setUpdateUrl({ url: cfg.url }); }
+        catch (e) { console.warn('setUpdateUrl failed, fall back to config default', e); }
+      }
 
       var latest = await p.getLatest();
       var remote = latest && latest.version ? String(latest.version) : '';

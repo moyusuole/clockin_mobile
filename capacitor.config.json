@@ -4,8 +4,9 @@
   "webDir": "public",
   "plugins": {
     "CapacitorUpdater": {
-      "updateUrl": "",
+      "updateUrl": "https://clockin-update-server.onrender.com/updates",
       "autoUpdate": "off",
+      "allowModifyUrl": true,
       "resetWhenUpdate": true,
       "autoDeletePrevious": true,
       "autoDeleteFailed": true,
