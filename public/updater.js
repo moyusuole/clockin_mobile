@@ -12,6 +12,10 @@
 
   var cached = null;
 
+  // 与 capacitor.config.json 的 CapacitorUpdater.updateUrl 保持一致：
+  // 重装/首次打开时本地没存地址，用它兜底，避免被“请先填写服务器地址”卡住。
+  var DEFAULT_UPDATE_URL = 'https://clockin-update-server.onrender.com/updates';
+
   // 取插件实例：原生环境返回插件对象，浏览器预览返回 false（缓存避免反复判断）
   function plugin() {
     if (cached === null) {
@@ -70,24 +74,23 @@
     if (busy) return;
 
     var cfg = root.CheckinStorage.getUpdateSettings();
-    if (!isHttpUrl(cfg.url)) {
-      if (!silent) setStatus('请先填写正确的服务器地址', 'err');
+    // 重装/首次打开时本地 url 为空，用写死的默认服务器兜底（与 capacitor.config 一致）
+    var effUrl = isHttpUrl(cfg.url) ? cfg.url : DEFAULT_UPDATE_URL;
+    if (!isHttpUrl(effUrl)) {
+      if (!silent) setStatus('未配置更新服务器', 'err');
       return;
     }
 
     busy = true;
     if (el.check) el.check.disabled = true;
     setStatus('正在检查更新…');
+    var latest = null;
     try {
-      // 仅在用户填了地址时才用 setUpdateUrl 覆盖（需 allowModifyUrl=true）；
-      // 若未填，插件会直接用 capacitor.config.json 里写死的默认地址。
-      // 用 try 包裹：地址设置失败也不拖累整个更新流程（仍可用默认地址）。
-      if (isHttpUrl(cfg.url)) {
-        try { await p.setUpdateUrl({ url: cfg.url }); }
-        catch (e) { console.warn('setUpdateUrl failed, fall back to config default', e); }
-      }
+      // 始终尝试把地址告诉插件（需 allowModifyUrl=true）；失败则退回 capacitor.config 写死的默认地址
+      try { await p.setUpdateUrl({ url: effUrl }); }
+      catch (e) { console.warn('setUpdateUrl failed, fall back to config default', e); }
 
-      var latest = await p.getLatest();
+      latest = await p.getLatest();
       var remote = latest && latest.version ? String(latest.version) : '';
       if (!remote) { setStatus('已是最新版 · ' + (cfg.installedVersion || '内置版本'), 'ok'); return; }
       if (remote === cfg.installedVersion) { setStatus('已是最新版 · ' + remote, 'ok'); return; }
@@ -102,13 +105,16 @@
 
       // next() 而非 set()：不打断用户当前操作，下次启动生效
       await p.next({ id: bundle.id });
-      root.CheckinStorage.setUpdateSettings({ installedVersion: remote });
+      root.CheckinStorage.setUpdateSettings({ installedVersion: remote, url: effUrl, enabled: true });
       setStatus('新版本 ' + remote + ' 已就绪，下次打开生效', 'ok');
       notifyUpdateReady(remote);
     } catch (e) {
       var msg = (e && e.message) ? e.message : String(e || '未知错误');
+      // 把服务端返回的版本号一并带出，便于定位（例如 1.0.4 仍失败说明下载/校验环节出错）
+      var extra = (latest && latest.version) ? ' (ver ' + latest.version + ')' : '';
       if (silent) setStatus('离线或服务器不可达，继续使用当前版本');
-      else setStatus('更新失败：' + msg, 'err');
+      else setStatus('更新失败：' + msg + extra, 'err');
+      console.error('[updater] checkUpdate error:', msg, 'latest=', latest);
     } finally {
       busy = false;
       if (el.check) el.check.disabled = false;
