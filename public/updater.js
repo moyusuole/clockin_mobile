@@ -45,6 +45,21 @@
     return /^https?:\/\/\S+$/.test(String(u || '').trim());
   }
 
+  // 更新就绪后用系统通知提示用户（静默 next() 不会自动弹窗，需主动告知）
+  function notifyUpdateReady(ver) {
+    var C = root.Capacitor;
+    var LN = C && C.Plugins && C.Plugins.LocalNotifications;
+    if (!LN) return;
+    LN.schedule({
+      notifications: [{
+        id: 9911,
+        title: '更新已就绪 · ' + ver,
+        body: '新版本已下载，重启 App 后立即生效',
+        channelId: 'checkin_reminder'
+      }]
+    }).catch(function () {});
+  }
+
   /**
    * 检查并安装更新
    * @param {boolean} silent 静默模式（自动检查，失败不打扰）
@@ -80,13 +95,16 @@
       if (!latest.url) { setStatus('服务端未提供下载地址', 'err'); return; }
 
       setStatus('发现新版本 ' + remote + '，下载中…');
-      var bundle = await p.download({ url: latest.url, version: remote });
+      // 必须传完整 latest 对象（含 checksum / sessionKey），否则原生层
+      // requireBundleChecksum 会因 checksum 为空抛 "Checksum required" 导致更新失败。
+      var bundle = await p.download(latest);
       if (!bundle || !bundle.id) { setStatus('下载失败，请稍后重试', 'err'); return; }
 
       // next() 而非 set()：不打断用户当前操作，下次启动生效
       await p.next({ id: bundle.id });
       root.CheckinStorage.setUpdateSettings({ installedVersion: remote });
       setStatus('新版本 ' + remote + ' 已就绪，下次打开生效', 'ok');
+      notifyUpdateReady(remote);
     } catch (e) {
       var msg = (e && e.message) ? e.message : String(e || '未知错误');
       if (silent) setStatus('离线或服务器不可达，继续使用当前版本');
